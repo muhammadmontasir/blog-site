@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
 import { posts } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { getUser } from '@/lib/db/queries';
 
 export async function PUT(
     request: Request,
@@ -11,6 +12,7 @@ export async function PUT(
         const { id } = params;
         const { title, slug, featureImage, content, state } = await request.json();
 
+        const { id: currentUserId = 0, name: currentUserName = '', role: currentUserRole = '' } = await getUser() ?? {};
         const updatedBlog = await db.update(posts)
             .set({
                 title,
@@ -19,6 +21,7 @@ export async function PUT(
                 content,
                 state,
                 updatedAt: new Date(),
+                updatedBy: currentUserId,
             })
             .where(eq(posts.id, parseInt(id)))
             .returning();

@@ -61,16 +61,11 @@ export default function DataTableDemo() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBlog, setEditingBlog] = useState<Blog | null>(null);
 
-  // console.log(getUser());
-
-
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await fetch('/api/blogs');
         const result = await response.json();
-
-        console.log(result);
 
         if (!response.ok) {
           throw new Error(result.error || 'Failed to fetch data');

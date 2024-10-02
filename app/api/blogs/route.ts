@@ -2,12 +2,16 @@ import { db } from '@/lib/db/drizzle';
 import { eq, like, sql } from 'drizzle-orm';
 import { posts } from '@/lib/db/schema';
 import { NextRequest, NextResponse } from 'next/server';
+import { getUser } from '@/lib/db/queries';
+
+
 
 export async function GET(req: NextRequest) {
   const { search, tags, sortBy, order, page, limit } = Object.fromEntries(new URL(req.url).searchParams);
 
   const pageSize = parseInt(limit || '10');
   const pageOffset = (parseInt(page || '0')) * pageSize;
+  const { id: currentUserId = 0, name: currentUserName = '', role: currentUserRole = '' } = await getUser() ?? {};
 
   // Base query
   let baseQuery = db.select({
@@ -19,7 +23,8 @@ export async function GET(req: NextRequest) {
     createdAt: posts.createdAt,
     featureImage: posts.featureImage,
     slug: posts.slug,
-    state: posts.state
+    state: posts.state,
+    updatedBy: posts.updatedBy,
   }).from(posts);
 
   // Search by title
@@ -59,15 +64,18 @@ export async function GET(req: NextRequest) {
 export async function POST(request: Request) {
   try {
     const { title, slug, featureImage, content, state } = await request.json();
+    const { id: currentUserId = 0, name: currentUserName = '', role: currentUserRole = '' } = await getUser() ?? {};
 
     const newBlog = await db.insert(posts).values({
       title,
       slug,
       content,
-      userId: 1,
-      author: 'John Doe',
+      userId: currentUserId,
+      author: currentUserName,
+      state,
       createdAt: new Date(),
       updatedAt: new Date(),
+      updatedBy: currentUserId,
     });
 
     return NextResponse.json({ blog: newBlog[0] });

@@ -153,6 +153,7 @@ export const posts = pgTable('posts', {
   state: varchar('state', { length: 20 }).notNull().default('Published'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  updatedBy: integer('updated_by').references(() => users.id),
 });
 
 export enum PostState {
