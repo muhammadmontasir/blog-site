@@ -29,6 +29,20 @@
       "when": 1727866019798,
       "tag": "0003_condemned_arclight",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1727871100108,
+      "tag": "0004_far_riptide",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1727885659016,
+      "tag": "0005_bizarre_sister_grimm",
+      "breakpoints": true
     }
   ]
 }

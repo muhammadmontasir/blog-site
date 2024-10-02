@@ -148,6 +148,7 @@ export const posts = pgTable('posts', {
   slug: varchar('slug', { length: 255 }).unique(),
   tags: text('tags').array(),
   author: varchar('author', { length: 100 }).notNull(),
+  userId: integer('user_id').references(() => users.id),
   featureImage: text('feature_image'),
   state: varchar('state', { length: 20 }).notNull().default('Published'),
   createdAt: timestamp('created_at').notNull().defaultNow(),

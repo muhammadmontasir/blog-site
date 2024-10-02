@@ -1,0 +1,1 @@
+ALTER TABLE "posts" ADD COLUMN "state" varchar(20) DEFAULT 'Published' NOT NULL;
