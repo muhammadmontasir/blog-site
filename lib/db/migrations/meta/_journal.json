@@ -50,6 +50,20 @@
       "when": 1727895800273,
       "tag": "0006_brainy_hardball",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1727902702455,
+      "tag": "0007_chief_zarek",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1727902710987,
+      "tag": "0008_amused_lake",
+      "breakpoints": true
     }
   ]
 }
