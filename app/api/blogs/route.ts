@@ -17,7 +17,9 @@ export async function GET(req: NextRequest) {
     tags: posts.tags,
     author: posts.author,
     createdAt: posts.createdAt,
-    featureImage: posts.featureImage
+    featureImage: posts.featureImage,
+    slug: posts.slug,
+    state: posts.state
   }).from(posts);
 
   // Search by title
@@ -52,4 +54,25 @@ export async function GET(req: NextRequest) {
   const total = totalQuery[0]?.count;
 
   return NextResponse.json({ blogs, total });
+}
+
+export async function POST(request: Request) {
+  try {
+    const { title, slug, featureImage, content, state } = await request.json();
+
+    const newBlog = await db.insert(posts).values({
+      title,
+      slug,
+      content,
+      userId: 1,
+      author: 'John Doe',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    return NextResponse.json({ blog: newBlog[0] });
+  } catch (error) {
+    console.error('Failed to create blog:', error);
+    return NextResponse.json({ error: 'Failed to create blog' }, { status: 500 });
+  }
 }
