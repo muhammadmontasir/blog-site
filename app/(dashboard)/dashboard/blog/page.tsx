@@ -1,6 +1,6 @@
 "use client"
 
-import * as React from "react"
+import * as React from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -12,11 +12,11 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table"
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+} from "@tanstack/react-table";
+import { ArrowUpDown, ChevronDown, MoreHorizontal, Pencil, Copy, Trash, Filter, Plus } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -25,8 +25,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -36,147 +36,33 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useState, useEffect } from "react"
+import { BlogFormModal } from './component/BlogFormModal';
+import { getUser } from '@/lib/db/queries';
 
-const data: Payment[] = [
-  {
-    id: "m5gr84i9",
-    amount: 316,
-    status: "success",
-    email: "ken99@yahoo.com",
-  },
-  {
-    id: "3u1reuv4",
-    amount: 242,
-    status: "success",
-    email: "Abe45@gmail.com",
-  },
-  {
-    id: "derv1ws0",
-    amount: 837,
-    status: "processing",
-    email: "Monserrat44@gmail.com",
-  },
-  {
-    id: "5kma53ae",
-    amount: 874,
-    status: "success",
-    email: "Silas22@gmail.com",
-  },
-  {
-    id: "bhqecj4p",
-    amount: 721,
-    status: "failed",
-    email: "carmella@hotmail.com",
-  },
-]
-
-type Payment = {
+type Blog = {
   id: string
-  amount: number
-  status: "pending" | "processing" | "success" | "failed"
-  email: string
+  title: string
+  slug: string
+  content: string
+  featureImage: string
+  state: 'Unpublished' | 'Published'
 }
 
-const columns: ColumnDef<Payment>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("status")}</div>
-    ),
-  },
-  {
-    accessorKey: "email",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Email
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
-  },
-  {
-    accessorKey: "amount",
-    header: () => <div className="text-right">Amount</div>,
-    cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("amount"))
-
-      // Format the amount as a dollar amount
-      const formatted = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-      }).format(amount)
-
-      return <div className="text-right font-medium">{formatted}</div>
-    },
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const payment = row.original
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(payment.id)}
-            >
-              Copy payment ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>View customer</DropdownMenuItem>
-            <DropdownMenuItem>View payment details</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
-    },
-  },
-]
-
 export default function DataTableDemo() {
-  const [data1, setData] = useState(null);
-  const [error, setError] = useState(null);
+  const [data, setData] = useState<Blog[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({})
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
+  const [filterColumn, setFilterColumn] = React.useState<string | null>('title');
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingBlog, setEditingBlog] = useState<Blog | null>(null);
+
+  // console.log(getUser());
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -185,12 +71,12 @@ export default function DataTableDemo() {
         const result = await response.json();
 
         console.log(result);
-        
+
         if (!response.ok) {
           throw new Error(result.error || 'Failed to fetch data');
         }
 
-        setData(result);
+        setData(result.blogs);
       } catch (error: any) {
         setError(error.message);
       }
@@ -198,6 +84,96 @@ export default function DataTableDemo() {
 
     fetchData();
   }, []);
+
+  const refreshData = async () => {
+    try {
+      const response = await fetch('/api/blogs');
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to fetch data');
+      }
+      setData(result.blogs);
+    } catch (error: any) {
+      setError(error.message);
+    }
+  };
+
+  const handleOpenModal = (blog: Blog | null = null) => {
+    setEditingBlog(blog);
+    setIsModalOpen(true);
+  };
+
+  const columns: ColumnDef<Blog>[] = [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: "title",
+      header: "Title",
+      cell: ({ row }) => (
+        <div className="truncate max-w-[200px]" title={row.getValue("title")}>
+          {row.getValue("title")}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "slug",
+      header: "Slug",
+      cell: ({ row }) => (
+        <div className="truncate max-w-[200px]" title={row.getValue("slug")}>
+          {row.getValue("slug")}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "featureImage",
+      header: "Feature Image",
+      cell: ({ row }) => <img src={row.getValue("featureImage")} alt="Feature" className="w-10 h-10 object-cover" />,
+    },
+    {
+      accessorKey: "state",
+      header: "State",
+      cell: ({ row }) => (
+        <div className="capitalize">{row.getValue("state")}</div>
+      ),
+    },
+    {
+      id: "actions",
+      enableHiding: false,
+      cell: ({ row }) => {
+        const blog = row.original;
+        return (
+          <div className="flex justify-between w-24">
+            <Pencil
+              className="h-4 w-4 cursor-pointer"
+              onClick={() => handleOpenModal(blog)}
+            />
+            <Copy className="h-4 w-4 cursor-pointer" />
+            <Trash className="h-4 w-4 cursor-pointer" />
+          </div>
+        );
+      },
+    },
+  ]
 
   const table = useReactTable({
     data,
@@ -219,16 +195,49 @@ export default function DataTableDemo() {
   })
 
   return (
+
     <div className="w-full">
-      <div className="flex items-center py-4">
-        <Input
-          placeholder="Filter emails..."
-          value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("email")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
+      <div className="flex justify-end">
+        <Button onClick={() => handleOpenModal()}>
+          <Plus className="h-4 mr-2 w-4 cursor-pointer" />
+          Create New Entry
+        </Button>
+        <BlogFormModal
+          blog={editingBlog ? { ...editingBlog, content: editingBlog.content || '' } : null}
+          isOpen={isModalOpen}
+          onOpenChange={setIsModalOpen}
+          onBlogSubmitted={() => {
+            refreshData();
+            setEditingBlog(null);
+          }}
         />
+      </div>
+
+      <div className="flex items-center py-4">
+        {filterColumn && (
+          <Input
+            placeholder={`Search by ${filterColumn}...`}
+            value={(table.getColumn(filterColumn)?.getFilterValue() as string) ?? ""}
+            onChange={(event) =>
+              table.getColumn(filterColumn)?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm ml-4"
+          />
+        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="ml-4">
+              <Filter className="mr-2 h-4 w-4" /> Filter
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {["title", "slug", "id", "state"].map((column) => (
+              <DropdownMenuItem key={column} onClick={() => setFilterColumn(column)}>
+                {column.charAt(0).toUpperCase() + column.slice(1)}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
@@ -267,9 +276,9 @@ export default function DataTableDemo() {
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </TableHead>
                   )
                 })}
