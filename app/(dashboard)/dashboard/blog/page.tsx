@@ -232,7 +232,6 @@ export default function DataTableDemo() {
   })
 
   return (
-
     <div className="w-full">
       <div className="flex justify-end">
         <Button onClick={() => handleOpenModal()}>
