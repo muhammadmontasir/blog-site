@@ -145,6 +145,7 @@ export const posts = pgTable('posts', {
   id: serial('id').primaryKey(),
   title: varchar('title', { length: 255 }).notNull(),
   content: text('content').notNull(),
+  slug: varchar('slug', { length: 255 }).unique(),
   tags: text('tags').array(),
   author: varchar('author', { length: 100 }).notNull(),
   featureImage: text('feature_image'),
