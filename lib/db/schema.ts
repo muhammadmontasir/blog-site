@@ -149,6 +149,12 @@ export const posts = pgTable('posts', {
   tags: text('tags').array(),
   author: varchar('author', { length: 100 }).notNull(),
   featureImage: text('feature_image'),
+  state: varchar('state', { length: 20 }).notNull().default('Published'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
+
+export enum PostState {
+  PUBLISHED = 'Published',
+  UNPUBLISHED = 'Unpublished',
+}
