@@ -13,8 +13,7 @@ export async function GET(req: NextRequest) {
   const pageOffset = (parseInt(page || '0')) * pageSize;
   const { id: currentUserId = 0, name: currentUserName = '', role: currentUserRole = '' } = await getUser() ?? {};
 
-  // Base query
-  let baseQuery = db.select({
+  let baseQuery: any = db.select({
     id: posts.id,
     title: posts.title,
     content: posts.content,
@@ -30,12 +29,6 @@ export async function GET(req: NextRequest) {
   // Search by title
   if (search) {
     baseQuery = baseQuery.where(like(posts.title, `%${search}%`));
-  }
-
-  // Tag filtering
-  if (tags) {
-    const tagsArray = tags.split(',');
-    baseQuery = baseQuery.where(sql`${posts.tags} && ${sql.array(tagsArray)}`);
   }
 
   // Sorting
@@ -66,6 +59,10 @@ export async function POST(request: Request) {
     const { title, slug, featureImage, content, state } = await request.json();
     const { id: currentUserId = 0, name: currentUserName = '', role: currentUserRole = '' } = await getUser() ?? {};
 
+    if (!title || !slug) {
+      throw new Error('Title and slug are required');
+    }
+    // @ts-ignore
     const newBlog = await db.insert(posts).values({
       title,
       slug,
