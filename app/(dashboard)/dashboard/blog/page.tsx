@@ -38,6 +38,7 @@ import {
 import { useState, useEffect } from "react"
 import { BlogFormModal } from './component/BlogFormModal';
 import { DeleteConfirmationModal } from './component/DeleteConfirmationModal';
+import { ShowContentModal } from './component/ShowContentModal';
 
 type Blog = {
   id: string
@@ -62,7 +63,8 @@ export default function DataTableDemo() {
   const [editingBlog, setEditingBlog] = useState<Blog | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingBlogId, setDeletingBlogId] = useState<string | null>(null);
-
+  const [isCopyModalOpen, setIsCopyModalOpen] = useState(false);
+  const [copyingBlogContent, setCopyingBlogContent] = useState<string>('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -104,6 +106,11 @@ export default function DataTableDemo() {
   const handleDelete = async (blogId: string) => {
     setDeletingBlogId(blogId);
     setIsDeleteModalOpen(true);
+  };
+
+  const handleCopy = (blog: Blog) => {
+    setCopyingBlogContent(blog.content);
+    setIsCopyModalOpen(true);
   };
 
   const confirmDelete = async () => {
@@ -191,7 +198,10 @@ export default function DataTableDemo() {
               className="h-4 w-4 cursor-pointer"
               onClick={() => handleOpenModal(blog)}
             />
-            <Copy className="h-4 w-4 cursor-pointer" />
+            <Copy
+              className="h-4 w-4 cursor-pointer"
+              onClick={() => handleCopy(blog)}
+            />
             <Trash
               className="h-4 w-4 cursor-pointer"
               onClick={() => handleDelete(blog.id)}
@@ -244,6 +254,12 @@ export default function DataTableDemo() {
         isOpen={isDeleteModalOpen}
         onOpenChange={setIsDeleteModalOpen}
         onConfirm={confirmDelete}
+      />
+
+      <ShowContentModal
+        isOpen={isCopyModalOpen}
+        onOpenChange={setIsCopyModalOpen}
+        content={copyingBlogContent}
       />
 
       <div className="flex items-center py-4">
