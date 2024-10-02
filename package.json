@@ -11,6 +11,7 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-alert-dialog": "^1.1.2",
     "@radix-ui/react-avatar": "^1.1.0",
     "@radix-ui/react-checkbox": "^1.1.2",
@@ -41,6 +42,7 @@
     "postgres": "^3.4.4",
     "react": "19.0.0-rc-7771d3a7-20240827",
     "react-dom": "19.0.0-rc-7771d3a7-20240827",
+    "react-hook-form": "^7.53.0",
     "server-only": "^0.0.1",
     "stripe": "^16.12.0",
     "tailwind-merge": "^2.5.2",
