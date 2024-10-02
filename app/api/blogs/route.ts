@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest) {
   const { search, tags, sortBy, order, page, limit } = Object.fromEntries(new URL(req.url).searchParams);
-  
+
   const pageSize = parseInt(limit || '10');
   const pageOffset = (parseInt(page || '0')) * pageSize;
 
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 
   // Search by title
   if (search) {
-    baseQuery = baseQuery.where(like(posts.title, `%${search}%`)); 
+    baseQuery = baseQuery.where(like(posts.title, `%${search}%`));
   }
 
   // Tag filtering
