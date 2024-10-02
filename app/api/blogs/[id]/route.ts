@@ -36,3 +36,18 @@ export async function PUT(
         return NextResponse.json({ error: 'Failed to update blog' }, { status: 500 });
     }
 }
+
+export async function DELETE(
+    request: Request,
+    { params }: { params: { id: string } }
+) {
+    try {
+        const deletedBlog = await db.delete(posts)
+            .where(eq(posts.id, parseInt(params.id)))
+            .returning();
+        return NextResponse.json({ message: 'Blog post deleted successfully', blog: deletedBlog[0] });
+    } catch (error) {
+        console.error('Failed to delete blog:', error);
+        return NextResponse.json({ error: 'Failed to delete blog' }, { status: 500 });
+    }
+}

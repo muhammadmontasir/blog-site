@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/table"
 import { useState, useEffect } from "react"
 import { BlogFormModal } from './component/BlogFormModal';
-import { getUser } from '@/lib/db/queries';
+import { DeleteConfirmationModal } from './component/DeleteConfirmationModal';
 
 type Blog = {
   id: string
@@ -60,6 +60,9 @@ export default function DataTableDemo() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBlog, setEditingBlog] = useState<Blog | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingBlogId, setDeletingBlogId] = useState<string | null>(null);
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -96,6 +99,32 @@ export default function DataTableDemo() {
   const handleOpenModal = (blog: Blog | null = null) => {
     setEditingBlog(blog);
     setIsModalOpen(true);
+  };
+
+  const handleDelete = async (blogId: string) => {
+    setDeletingBlogId(blogId);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (deletingBlogId) {
+      try {
+        const response = await fetch(`/api/blogs/${deletingBlogId}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete blog');
+        }
+
+        await refreshData();
+      } catch (error: any) {
+        setError(error.message);
+      } finally {
+        setIsDeleteModalOpen(false);
+        setDeletingBlogId(null);
+      }
+    }
   };
 
   const columns: ColumnDef<Blog>[] = [
@@ -163,7 +192,10 @@ export default function DataTableDemo() {
               onClick={() => handleOpenModal(blog)}
             />
             <Copy className="h-4 w-4 cursor-pointer" />
-            <Trash className="h-4 w-4 cursor-pointer" />
+            <Trash
+              className="h-4 w-4 cursor-pointer"
+              onClick={() => handleDelete(blog.id)}
+            />
           </div>
         );
       },
@@ -207,6 +239,12 @@ export default function DataTableDemo() {
           }}
         />
       </div>
+
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onOpenChange={setIsDeleteModalOpen}
+        onConfirm={confirmDelete}
+      />
 
       <div className="flex items-center py-4">
         {filterColumn && (
