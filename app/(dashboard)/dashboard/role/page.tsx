@@ -19,6 +19,7 @@ import { Pencil, Copy, Trash, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { RoleFormModal } from './component/RoleFormModal'
 import { DeleteConfirmationModal } from './component/DeleteConfirmationModal'
+import { useUser } from '@/lib/hooks/useUser';
 
 interface Role {
     id: number
@@ -28,6 +29,7 @@ interface Role {
 }
 
 export default function RolesPage() {
+    const { user, isLoading: userLoading } = useUser();
     const [roles, setRoles] = useState<Role[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -106,18 +108,22 @@ export default function RolesPage() {
                 const role = row.original
                 return (
                     <div className="flex justify-between w-24">
-                        <Pencil
-                            className="h-4 w-4 cursor-pointer"
-                            onClick={() => handleOpenModal(role)}
-                        />
+                        {(user?.role?.toLowerCase() === 'author' || user?.role?.toLowerCase() === 'admin') && (
+                            <Pencil
+                                className="h-4 w-4 cursor-pointer"
+                                onClick={() => handleOpenModal(role)}
+                            />
+                        )}
                         <Copy
                             className="h-4 w-4 cursor-pointer"
                             onClick={() => handleOpenModal(role, true)}
                         />
-                        <Trash
-                            className="h-4 w-4 cursor-pointer"
-                            onClick={() => handleDelete(role.id)}
-                        />
+                        {user?.role?.toLowerCase() === 'admin' && (
+                            <Trash
+                                className="h-4 w-4 cursor-pointer"
+                                onClick={() => handleDelete(role.id)}
+                            />
+                        )}
                     </div>
                 )
             },
@@ -135,12 +141,14 @@ export default function RolesPage() {
 
     return (
         <div className="container mx-auto py-10 w-full">
-            <div className="flex justify-end mb-4">
-                <Button onClick={() => handleOpenModal()}>
-                    <Plus className="h-4 mr-2 w-4 cursor-pointer" />
-                    Add New Role
-                </Button>
-            </div>
+            {user?.role?.toLowerCase() === 'admin' && (
+                <div className="flex justify-end mb-4">
+                    <Button onClick={() => handleOpenModal()}>
+                        <Plus className="h-4 mr-2 w-4 cursor-pointer" />
+                        Add New Role
+                    </Button>
+                </div>
+            )}
 
             <div className="rounded-md border">
                 <Table>

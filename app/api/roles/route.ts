@@ -2,8 +2,14 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
 import { roles, users } from '@/lib/db/schema';
 import { eq, count } from 'drizzle-orm';
+import { getUser } from '@/lib/db/queries';
 
 export async function GET() {
+    const user = await getUser();
+    if (!user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     try {
         const rolesWithUserCount = await db
             .select({
@@ -24,6 +30,11 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+    const user = await getUser();
+    if (!user || user.role?.toLowerCase() !== 'admin') {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     try {
         const { name, description } = await request.json();
         const newRole = await db.insert(roles).values({ name, description }).returning();

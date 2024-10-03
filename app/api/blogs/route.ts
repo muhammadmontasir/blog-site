@@ -55,6 +55,11 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(request: Request) {
+  const user = await getUser();
+  if (!user || (user.role?.toLowerCase() !== 'author' && user.role?.toLowerCase() !== 'admin')) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { title, slug, featureImage, content, state } = await request.json();
     const { id: currentUserId = 0, email, role: currentUserRole = '' } = await getUser() ?? {};

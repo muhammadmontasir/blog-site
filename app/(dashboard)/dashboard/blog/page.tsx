@@ -39,6 +39,7 @@ import { useState, useEffect } from "react"
 import { BlogFormModal } from './component/BlogFormModal';
 import { DeleteConfirmationModal } from './component/DeleteConfirmationModal';
 import { ShowContentModal } from './component/ShowContentModal';
+import { useUser } from '@/lib/hooks/useUser';
 
 type Blog = {
   id: string
@@ -50,6 +51,7 @@ type Blog = {
 }
 
 export default function DataTableDemo() {
+  const { user, isLoading: userLoading } = useUser();
   const [data, setData] = useState<Blog[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -194,18 +196,22 @@ export default function DataTableDemo() {
         const blog = row.original;
         return (
           <div className="flex justify-between w-24">
-            <Pencil
-              className="h-4 w-4 cursor-pointer"
-              onClick={() => handleOpenModal(blog)}
-            />
+            {(user?.role?.toLowerCase() === 'author' || user?.role?.toLowerCase() === 'admin') && (
+              <Pencil
+                className="h-4 w-4 cursor-pointer"
+                onClick={() => handleOpenModal(blog)}
+              />
+            )}
             <Copy
               className="h-4 w-4 cursor-pointer"
               onClick={() => handleCopy(blog)}
             />
-            <Trash
-              className="h-4 w-4 cursor-pointer"
-              onClick={() => handleDelete(blog.id)}
-            />
+            {user?.role?.toLowerCase() === 'admin' && (
+              <Trash
+                className="h-4 w-4 cursor-pointer"
+                onClick={() => handleDelete(blog.id)}
+              />
+            )}
           </div>
         );
       },
@@ -233,21 +239,23 @@ export default function DataTableDemo() {
 
   return (
     <div className="w-full">
-      <div className="flex justify-end">
-        <Button onClick={() => handleOpenModal()}>
-          <Plus className="h-4 mr-2 w-4 cursor-pointer" />
-          Create New Entry
-        </Button>
-        <BlogFormModal
-          blog={editingBlog ? { ...editingBlog, content: editingBlog.content || '' } : null}
-          isOpen={isModalOpen}
-          onOpenChange={setIsModalOpen}
-          onBlogSubmitted={() => {
-            refreshData();
-            setEditingBlog(null);
-          }}
-        />
-      </div>
+      <BlogFormModal
+        blog={editingBlog ? { ...editingBlog, content: editingBlog.content || '' } : null}
+        isOpen={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        onBlogSubmitted={() => {
+          refreshData();
+          setEditingBlog(null);
+        }}
+      />
+      {(user?.role?.toLowerCase() === 'author' || user?.role?.toLowerCase() === 'admin') && (
+        <div className="flex justify-end">
+          <Button onClick={() => handleOpenModal()}>
+            <Plus className="h-4 mr-2 w-4 cursor-pointer" />
+            Create New Entry
+          </Button>
+        </div>
+      )}
 
       <DeleteConfirmationModal
         isOpen={isDeleteModalOpen}

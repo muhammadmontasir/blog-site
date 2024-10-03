@@ -2,11 +2,17 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
 import { roles } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { getUser } from '@/lib/db/queries';
 
 export async function PUT(
     request: Request,
     { params }: { params: { id: string } }
 ) {
+    const user = await getUser();
+    if (!user || user.role?.toLowerCase() !== 'admin') {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     try {
         const { name, description } = await request.json();
         const updatedRole = await db
@@ -30,6 +36,11 @@ export async function DELETE(
     request: Request,
     { params }: { params: { id: string } }
 ) {
+    const user = await getUser();
+    if (!user || user.role?.toLowerCase() !== 'admin') {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     try {
         const deletedRole = await db
             .delete(roles)

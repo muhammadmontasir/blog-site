@@ -8,6 +8,11 @@ export async function PUT(
     request: Request,
     { params }: { params: { id: string } }
 ) {
+    const user = await getUser();
+    if (!user || (user.role?.toLowerCase() !== 'author' && user.role?.toLowerCase() !== 'admin')) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     try {
         const { id } = params;
         const { title, slug, featureImage, content, state } = await request.json();
@@ -41,6 +46,11 @@ export async function DELETE(
     request: Request,
     { params }: { params: { id: string } }
 ) {
+    const user = await getUser();
+    if (!user || user.role?.toLowerCase() !== 'admin') {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     try {
         const deletedBlog = await db.delete(posts)
             .where(eq(posts.id, parseInt(params.id)))

@@ -57,8 +57,6 @@ export function RoleFormModal({
         }
     }, [role, form]);
 
-    console.log(role, form.getValues());
-
     const { handleSubmit, formState: { isSubmitting } } = useForm();
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
