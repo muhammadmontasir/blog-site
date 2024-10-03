@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
 export async function POST(request: Request) {
   try {
     const { title, slug, featureImage, content, state } = await request.json();
-    const { id: currentUserId = 0, name: currentUserName = '', role: currentUserRole = '' } = await getUser() ?? {};
+    const { id: currentUserId = 0, email, role: currentUserRole = '' } = await getUser() ?? {};
 
     if (!title || !slug) {
       throw new Error('Title and slug are required');
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
       slug,
       content,
       userId: currentUserId,
-      author: currentUserName,
+      author: email,
       state,
       createdAt: new Date(),
       updatedAt: new Date(),
