@@ -7,9 +7,10 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
+    DialogFooter,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Blog = {
     id?: string;
@@ -25,9 +26,10 @@ type BlogFormModalProps = {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
     onBlogSubmitted: () => void;
+    onImageUpload: (file: File) => Promise<string>;
 };
 
-export function BlogFormModal({ blog, isOpen, onOpenChange, onBlogSubmitted }: BlogFormModalProps) {
+export function BlogFormModal({ blog, isOpen, onOpenChange, onBlogSubmitted, onImageUpload }: BlogFormModalProps) {
     const [formData, setFormData] = useState<Blog>({
         title: "",
         slug: "",
@@ -35,6 +37,7 @@ export function BlogFormModal({ blog, isOpen, onOpenChange, onBlogSubmitted }: B
         content: "",
         state: "Unpublished",
     });
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         if (blog) {
@@ -50,8 +53,31 @@ export function BlogFormModal({ blog, isOpen, onOpenChange, onBlogSubmitted }: B
         }
     }, [blog]);
 
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSelectChange = (value: string) => {
+        setFormData(prev => ({ ...prev, state: value as 'Unpublished' | 'Published' }));
+    };
+
+    const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            try {
+                const imagePath = await onImageUpload(file);
+                setFormData(prev => ({ ...prev, featureImage: imagePath }));
+            } catch (error) {
+                console.error('Failed to upload image:', error);
+            }
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsLoading(true);
+
         try {
             const url = blog ? `/api/blogs/${blog.id}` : '/api/blogs';
             const method = blog ? 'PUT' : 'POST';
@@ -63,14 +89,17 @@ export function BlogFormModal({ blog, isOpen, onOpenChange, onBlogSubmitted }: B
                 },
                 body: JSON.stringify(formData),
             });
-            const result = await response.json();
+
             if (!response.ok) {
-                throw new Error(result.error || `Failed to ${blog ? 'update' : 'add'} blog post`);
+                throw new Error('Failed to save blog');
             }
-            onOpenChange(false);
+
             onBlogSubmitted();
-        } catch (error: any) {
-            console.error(`Failed to ${blog ? 'update' : 'add'} blog post:`, error);
+            onOpenChange(false);
+        } catch (error) {
+            console.error('Error saving blog:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -78,72 +107,63 @@ export function BlogFormModal({ blog, isOpen, onOpenChange, onBlogSubmitted }: B
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>{blog ? 'Edit' : 'Add New'} Blog Post</DialogTitle>
+                    <DialogTitle>{blog ? 'Edit Blog' : 'Create New Blog'}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit}>
                     <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="title" className="text-right">
-                                Title
-                            </Label>
+                        <Input
+                            name="title"
+                            placeholder="Title"
+                            value={formData.title}
+                            onChange={handleChange}
+                            required
+                        />
+                        <Input
+                            name="slug"
+                            placeholder="Slug"
+                            value={formData.slug}
+                            onChange={handleChange}
+                            required
+                        />
+                        <Textarea
+                            name="content"
+                            placeholder="Content"
+                            value={formData.content}
+                            onChange={handleChange}
+                            required
+                        />
+                        <div>
                             <Input
-                                id="title"
-                                value={formData.title}
-                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                className="col-span-3"
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageChange}
                             />
+                            {formData.featureImage && (
+                                <img
+                                    src={formData.featureImage}
+                                    alt="Feature"
+                                    className="mt-2 w-32 h-32 object-cover rounded"
+                                />
+                            )}
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="slug" className="text-right">
-                                Slug
-                            </Label>
-                            <Input
-                                id="slug"
-                                value={formData.slug}
-                                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                                className="col-span-3"
-                            />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="featureImage" className="text-right">
-                                Feature Image URL
-                            </Label>
-                            <Input
-                                id="featureImage"
-                                value={formData.featureImage}
-                                onChange={(e) => setFormData({ ...formData, featureImage: e.target.value })}
-                                className="col-span-3"
-                            />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="content" className="text-right">
-                                Content
-                            </Label>
-                            <Textarea
-                                id="content"
-                                value={formData.content}
-                                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                                className="col-span-3"
-                            />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="state" className="text-right">
-                                State
-                            </Label>
-                            <select
-                                id="state"
-                                value={formData.state}
-                                onChange={(e) => setFormData({ ...formData, state: e.target.value as 'Unpublished' | 'Published' })}
-                                className="col-span-3"
-                            >
-                                <option value="Unpublished">Unpublished</option>
-                                <option value="Published">Published</option>
-                            </select>
-                        </div>
+                        <Select
+                            value={formData.state}
+                            onValueChange={handleSelectChange}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select state" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="Unpublished">Unpublished</SelectItem>
+                                <SelectItem value="Published">Published</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
-                    <div className="flex justify-end">
-                        <Button type="submit">{blog ? 'Update' : 'Add'} Blog Post</Button>
-                    </div>
+                    <DialogFooter>
+                        <Button type="submit" disabled={isLoading}>
+                            {isLoading ? 'Saving...' : 'Save'}
+                        </Button>
+                    </DialogFooter>
                 </form>
             </DialogContent>
         </Dialog>

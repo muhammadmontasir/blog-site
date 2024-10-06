@@ -35,7 +35,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { BlogFormModal } from './component/BlogFormModal';
 import { DeleteConfirmationModal } from './component/DeleteConfirmationModal';
 import { ShowContentModal } from './component/ShowContentModal';
@@ -136,6 +136,28 @@ export default function DataTableDemo() {
     }
   };
 
+  const handleImageUpload = useCallback(async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const response = await fetch('/api/blogs/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const result = await response.json();
+      return result.imagePath;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw error;
+    }
+  }, []);
+
   const columns: ColumnDef<Blog>[] = [
     {
       id: "select",
@@ -180,7 +202,21 @@ export default function DataTableDemo() {
     {
       accessorKey: "featureImage",
       header: "Feature Image",
-      cell: ({ row }) => <img src={row.getValue("featureImage")} alt="Feature" className="w-10 h-10 object-cover" />,
+      cell: ({ row }) => (
+        <div className="w-16 h-16">
+          {row.getValue("featureImage") ? (
+            <img
+              src={row.getValue("featureImage")}
+              alt="Feature"
+              className="w-full h-full object-cover rounded"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded">
+              No image
+            </div>
+          )}
+        </div>
+      ),
     },
     {
       accessorKey: "state",
@@ -247,6 +283,7 @@ export default function DataTableDemo() {
           refreshData();
           setEditingBlog(null);
         }}
+        onImageUpload={handleImageUpload}
       />
       {(user?.role?.toLowerCase() === 'author' || user?.role?.toLowerCase() === 'admin') && (
         <div className="flex justify-end">
